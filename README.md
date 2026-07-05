@@ -1,6 +1,9 @@
 # Smart-Convenient-Lock
 Repository for the assignment on embedded systems
 
+WORD DOC LINK:
+https://docs.google.com/document/d/1mEHsDnP15CP1uJ1rxdof8RvS7BrvTVF6/edit?usp=sharing&ouid=111258450622327549484&rtpof=true&sd=true
+
 ## 1. Introduction
 
 Electronics are ubiquitous in the modern world; it is genuinely difficult to find a daily task or scenario that does not currently rely on an electronic solution. Consider, for instance, residential complexes where entry is managed by an electric intercom system of varying quality, or hospitals and offices where medical staff areas are restricted by facial recognition access control. Electronic access devices are prevalent across numerous sectors, employing a wide variety of sensors and actuators. However, the most prominent characteristic of these high-end systems is often the precise reason average consumers avoid them: they are prohibitively expensive.
