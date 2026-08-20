@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "nombre": "Admin Principal",
+    "clave": "1729"
+  },
+  {
+    "id": 2,
+    "nombre": "Usuario Prueba",
+    "clave": "5555"
+  }
+]

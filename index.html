@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Cerradura IoT</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-unlock { background-color: #28a745; color: white; }
+        .btn-admin { background-color: #007bff; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        input { padding: 10px; font-size: 16px; margin: 5px; width: calc(100% - 24px); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+        #camera-stream { width: 100%; max-width: 500px; background-color: #ccc; height: 300px; margin: auto; display: flex; align-items: center; justify-content: center; color: #666;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Cerradura Inteligente</h2>
+    
+    <!-- Sección de Visor de Cámara -->
+    <div id="camera-container">
+        <img id="camera-stream" src="http://192.168.4.10:81/stream" alt="Esperando conexión de cámara..." style="width: 100%; max-width: 500px; border-radius: 10px; background-color: #ccc; min-height: 300px;">
+    </div>
+    <button id="btn-guardar-rostro" class="btn-admin hidden" onclick="guardarRostro()">📸 Guardar Rostro de Cámara</button>
+
+    <!-- Botón de Apertura Rápida -->
+    <button class="btn-unlock" onclick="abrirPuerta()">🔓 Abrir Puerta</button>
+
+    <hr>
+
+    <!-- Sección de Login Admin -->
+    <div id="login-section">
+        <h3>Acceso Administrador</h3>
+        <input type="password" id="admin-pin" placeholder="Ingrese PIN (ej. 0403)">
+        <button class="btn-admin" onclick="login()">Ingresar</button>
+        <p id="login-msg" style="color: red;"></p>
+    </div>
+
+    <!-- Sección de Administración (Oculta por defecto) -->
+    <div id="admin-section" class="hidden">
+        <h3>Gestión de Usuarios</h3>
+        
+        <!-- Formulario para agregar/editar usuario -->
+        <input type="number" id="user-id" placeholder="ID (Lector o Teclado)">
+        <input type="text" id="user-name" placeholder="Nombre y Apellido">
+        <input type="text" id="user-key" placeholder="Clave de Teclado">
+        <button class="btn-admin" onclick="guardarUsuario()">Guardar Usuario</button>
+
+        <!-- Tabla de usuarios registrados -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Clave</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="user-table-body">
+                <!-- Se llena dinámicamente con JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // --- LÓGICA JAVASCRIPT ---
+
+    function abrirPuerta() {
+        fetch('/unlock', { method: 'POST' })
+            .then(res => res.text())
+            .then(text => alert(text))
+            .catch(err => alert('Error de conexión'));
+    }
+
+    function login() {
+        const pin = document.getElementById('admin-pin').value;
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `pin=${pin}`
+        })
+        .then(res => {
+            if (res.ok) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('admin-section').classList.remove('hidden');
+                cargarUsuarios(); // Carga la lista al entrar
+            } else {
+                document.getElementById('login-msg').innerText = "PIN Incorrecto";
+            }
+        });
+    }
+
+    function cargarUsuarios() {
+        fetch('/users')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('user-table-body');
+                tbody.innerHTML = "";
+                data.forEach(user => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <!-- Aquí cambiamos .nombre por .name y .clave por .pin -->
+                            <td>${user.name}</td>
+                            <td>${user.pin}</td>
+                            <td><button class="btn-danger" onclick="borrarUsuario(${user.id})">Borrar</button></td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function guardarUsuario() {
+        // Corregido: Coinciden exactamente con los IDs de los inputs del HTML
+        const id = document.getElementById('user-id').value;
+        const name = document.getElementById('user-name').value;
+        const pin = document.getElementById('user-key').value;
+
+        // Validamos que no estén vacíos
+        if (!id || !name || !pin) {
+            alert("Por favor completa todos los campos.");
+            return;
+        }
+
+        // Enviamos los datos al ESP32 usando los nombres de parámetros que espera el backend (id, name, pin)
+        fetch('/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id=${id}&name=${name}&pin=${pin}`
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Usuario guardado exitosamente");
+                window.location.reload();
+            } else {
+                alert("Error al guardar el usuario en la cerradura");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("No se pudo conectar con el dispositivo.");
+        });
+    }
+
+    function borrarUsuario(id) {
+        if (confirm("¿Estás seguro de que deseas borrar el usuario y su huella física (ID: " + id + ")?")) {
+            fetch(`/users?id=${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Usuario y huella eliminados correctamente.");
+                    window.location.reload(); 
+                } else {
+                    alert("Error al intentar eliminar el usuario de la cerradura.");
+                }
+            })
+            .catch(error => {
+                console.error("Error de red:", error);
+                alert("No se pudo conectar con la cerradura.");
+            });
+        }
+    }
+    // --- LÓGICA DE ROSTROS ---
+    
+    // Pregunta cada 2 segundos a la ESP32 si se ingresó C + 0403
+    setInterval(() => {
+        fetch('/status_rostro')
+            .then(res => res.text())
+            .then(status => {
+                if (status === "ACTIVO") {
+                    document.getElementById('btn-guardar-rostro').classList.remove('hidden');
+                    alert("Modo registro de rostro activado desde el teclado.");
+                }
+            })
+            .catch(err => console.log("Revisando estado..."));
+    }, 2000);
+
+    function guardarRostro() {
+        const id = prompt("Ingresa el ID del usuario para guardar su rostro (Debe coincidir con su ID de base de datos):");
+        if (id) {
+            // Le ordenamos a la ESP32-CAM (IP 192.168.4.10) que enrole el rostro en ese ID
+            fetch(`http://192.168.4.10:81/enroll_face?id=${id}`)
+                .then(res => res.text())
+                .then(text => {
+                    alert("Respuesta de cámara: " + text);
+                    document.getElementById('btn-guardar-rostro').classList.add('hidden'); // Ocultar tras usar
+                })
+                .catch(err => alert("Error conectando con la cámara"));
+        }
+    }
+</script>
+</body>
+</html>
