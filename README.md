@@ -18,7 +18,22 @@ El dispositivo consiste en un sistema embebido para el control de una cerradura 
 Como limitación, el prototipo depende de la alimentación eléctrica y de la conexión a Internet para determinadas funciones de monitoreo y control remoto. Sin embargo, para evitar que una falla eléctrica, pérdida de conexión, incendio, sismo o bloqueo del sistema impida la evacuación, se incorporará un mecanismo local de apertura de emergencia desde el interior, independiente del ESP32, del servidor, de Internet y de la alimentación eléctrica. De esta manera, el bloqueo generado ante un intento de acceso no autorizado afectará únicamente el ingreso desde el exterior y no impedirá la salida de las personas desde el interior. Otras funciones adicionales, como la detección automática de humo o la integración con sistemas externos de emergencia, quedan fuera del alcance del prototipo.
 
 3. **Diagramas**
-
+<figure>
+  <img src="im1.jpg" alt="Captura del proyecto">
+  <figcaption><i>Figura 1: Diagrama de Contexto.</i></figcaption>
+</figure>
+<figure>
+  <img src="im2.jpg" alt="Captura del proyecto">
+  <figcaption><i>Figura 2: Diagrama de Bloques.</i></figcaption>
+</figure>
+<figure>
+  <img src="im3.jpg" alt="Captura del proyecto">
+  <figcaption><i>Figura 3: Organigrama.</i></figcaption>
+</figure>
+<figure>
+  <img src="im4.jpg" alt="Captura del proyecto">
+  <figcaption><i>Figura 4: Diagrama de Niveles.</i></figcaption>
+</figure>
 
 4. **Alternativas de diseño**
 
